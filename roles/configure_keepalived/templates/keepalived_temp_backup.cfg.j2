@@ -1,0 +1,38 @@
+global_defs {
+  notification_email {
+  }
+  router_id LVS_DEVEL
+  vrrp_skip_check_adv_addr
+  vrrp_garp_interval 0
+  vrrp_gna_interval 0
+}
+vrrp_script chk_haproxy {
+  script "killall -0 haproxy"
+  interval 2
+  weight 2
+}
+vrrp_instance haproxy-vip {
+  state BACKUP
+  priority 100
+  interface {{ interface_02}}
+  virtual_router_id 60
+  advert_int 1
+  authentication {
+    auth_type PASS
+    auth_pass 1111
+  }
+  unicast_src_ip {{ hostvars[groups['loadbalancer'][1]]['ansible_host'] }}
+  unicast_peer {
+    {{ hostvars[groups['loadbalancer'][0]]['ansible_host'] }}
+  }
+  virtual_ipaddress {
+    {{ hostvars[groups['floating_ip'][0]]['ansible_host'] | default('127.0.0.10') }}/24
+  }
+  track_script {
+
+    chk_haproxy
+
+  }
+
+}
+

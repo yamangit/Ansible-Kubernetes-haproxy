@@ -1,0 +1,44 @@
+global
+    daemon
+    maxconn 256
+
+defaults
+    mode tcp
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+
+frontend frontend_name
+    bind *:6443
+    mode tcp
+    default_backend backend_servers
+
+backend backend_servers
+    mode tcp
+    option tcplog
+    option tcp-check
+    balance roundrobin
+    default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
+{% for host in groups['master'] %}{% if loop.first %}
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:6443 check{% else %} 
+    server {{ host }} {{ hostvars[host]['ansible_host'] }}:6443 check{% endif %}
+{% endfor %}
+
+listen http
+  bind *:80
+  mode tcp
+{% for host in groups['master'] + groups['worker'] %}
+  server {{ host }} {{ hostvars[host]['ansible_host'] }}:{{ingress_nginx_controller_port_80}}
+{% endfor %}
+ 
+listen https
+  bind *:443
+  mode tcp
+  mode tcp
+{% for host in groups['master'] + groups['worker'] %}
+  server {{ host }} {{ hostvars[host]['ansible_host'] }}:{{ingress_nginx_controller_port_443}}
+{% endfor %}
+listen stats
+  mode http
+  bind *:5000
+  stats enable

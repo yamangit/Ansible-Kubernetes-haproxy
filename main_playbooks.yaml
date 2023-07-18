@@ -1,0 +1,74 @@
+---
+# - name: Change all hostname in suitable form
+#   hosts: all,!floating_ip
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - change_hostname
+
+# - name: Configure keepalived
+#   hosts: loadbalancer
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - configure_keepalived
+
+# - name: Installing haproxy
+#   hosts: loadbalancer
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - role: install_haproxy
+
+- name: Installing Kubernetes in master nodes
+  hosts: [master,worker]
+  gather_facts: true
+  become: true
+  roles:
+    - role: install_kubernetes
+
+- name: Init master nodes
+  hosts: master
+  gather_facts: true
+  become: true
+  roles:
+    - role: init_kubernetes
+
+- name: Join workers to master
+  hosts: all,!floaring_ip,!loadbalancer
+  gather_facts: true
+  become: true
+  roles:
+    - role: join_workers
+  
+- name: Join Master to master
+  hosts: master
+  gather_facts: true
+  become: true
+  roles:
+    - role: join_masters
+      when: 
+        - "'master' in group_names and groups['master']|length == 2"
+
+- name: Copy Init Command in ansible_user
+  hosts: all,!floating_ip,!loadbalancer
+  gather_facts: true
+  roles:
+    - role: copy_init_config
+
+- name: Install Ingress controller
+  hosts: master[0]
+  roles:
+    - extract_ingress_ports
+
+- name: Configure loadbalancer
+  hosts: loadbalancer
+  become: true
+  roles:
+    - configure_loadbalancer
+
+- name: Delete Files from Local Machine
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - role: cleanup_localhost

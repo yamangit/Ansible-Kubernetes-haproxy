@@ -1,0 +1,11 @@
+- name: Cleaningup the dangerous files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ playbook_dir }}/roles/join_masters/templates/masters.join.j2"
+    - "{{ playbook_dir }}/roles/join_workers/templates/worker.join.j2"
+    - "{{ playbook_dir }}/roles/extract_ingress_ports/templates/backup_final-edited.cfg.j2"
+    - "{{ playbook_dir }}/roles/extract_ingress_ports/templates/master_final-edited.cfg.j2"
+    - "{{ playbook_dir }}/hosts_lists.txt"
+    - "{{ playbook_dir }}/inventory.ini"

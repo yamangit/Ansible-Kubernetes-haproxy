@@ -1,0 +1,111 @@
+- name: Fetch init_command to local machine
+  ansible.builtin.fetch:
+    src: "/root/init_command"
+    dest: "init_command"
+    flat: yes
+    fail_on_missing: yes
+  become: yes
+  when: "'master' in  group_names and inventory_hostname == groups['master'][0]"
+
+- name: Create kube config directory in master-01
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.kube"
+    state: directory
+    mode: "0700"
+  become: false
+  when: "'master' in  group_names and inventory_hostname == groups['master'][0]"
+
+- name: Register kube config directory path in master-01
+  ansible.builtin.command: echo "{{ ansible_env.HOME }}/.kube"
+  register: kube_config_dir
+  changed_when: false
+  become: false
+  when: "'master' in  group_names and inventory_hostname == groups['master'][0]"
+
+- name: Copy kube config file master-01
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ kube_config_dir.stdout }}/config"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+    remote_src: true
+  become: yes
+  become_user: root
+  when: "'master' in  group_names and inventory_hostname == groups['master'][0]"
+
+- name: Get Kubernetes nodes
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    kubectl get nodes -o wide
+  args:
+    executable: /bin/bash
+  changed_when: false
+  become: false
+  when: "'master' in  group_names and inventory_hostname == groups['master'][0]"
+
+- name: Create kube config directory in master-02
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.kube"
+    state: directory
+    mode: "0700"
+  become: false
+  when: "'master' in  group_names and inventory_hostname == groups['master'][1]"
+
+- name: Register kube config directory path in master-02
+  ansible.builtin.command: echo "{{ ansible_env.HOME }}/.kube"
+  register: kube_config_dir
+  changed_when: false
+  become: false
+  when: "'master' in  group_names and inventory_hostname == groups['master'][1]"
+
+- name: Copy kube config file in master-02
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ kube_config_dir.stdout }}/config"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+    remote_src: true
+  become: yes
+  become_user: root
+  when: "'master' in  group_names and inventory_hostname == groups['master'][1]"
+
+- name: Get Kubernetes nodes from master-02
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    kubectl get nodes -o wide
+  args:
+    executable: /bin/bash
+  changed_when: false
+  become: false
+  when: "'master' in  group_names and inventory_hostname == groups['master'][1]"
+
+
+- name: Check if Flannel is installed in master nodes
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    kubectl get daemonset -n kube-flannel kube-flannel-ds -o name | grep kube-flannel-ds
+  args:
+    executable: /bin/bash
+  register: flannel_check
+  ignore_errors: true
+  changed_when: false
+  when: "'master' in  group_names and inventory_hostname == groups['master'][0]"
+
+- name: Install Flannel if not present on the first master nodes
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  args:
+    executable: /bin/bash
+  ignore_errors: true
+  register: ignore_errors_register
+  when: "'master' in group_names and groups['master'].index(inventory_hostname) == 0"
+  changed_when: true
+
+  

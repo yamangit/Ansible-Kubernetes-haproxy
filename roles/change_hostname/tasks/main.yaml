@@ -1,0 +1,4 @@
+- name: Set hostname for each host in the inventory
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+  when: "'master' in group_names or 'worker' in group_names or 'loadbalancer' in group_names"

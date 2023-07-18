@@ -1,0 +1,43 @@
+- name: Generate worker join command
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    echo "$(sudo kubeadm token create --print-join-command)"
+  args:
+    executable: /bin/bash
+  register: worker_join_command
+  changed_when: true
+  when: inventory_hostname == groups['master'][0]
+
+- name: Save worker join command to template file
+  ansible.builtin.copy:
+    content: "{{ worker_join_command.stdout }}"
+    dest: worker.join.j2
+    mode: 0644
+  when: inventory_hostname == groups['master'][0]
+
+- name: Fetch worker.join.j2 to local machine
+  ansible.builtin.fetch:
+    src: worker.join.j2
+    dest: roles/join_workers/templates/worker.join.j2
+    flat: yes
+  when: inventory_hostname == groups['master'][0]
+
+- name: Read worker join command from file
+  ansible.builtin.template:
+    src: worker.join.j2
+    dest: /home/{{ ansible_user }}/worker.join.sh
+    mode: "0755"
+    force: yes
+  when: "'worker' in  group_names"
+
+- name: Execute command from file on remote hosts
+  ansible.builtin.shell: |
+    #!/bin/bash 
+    set -o pipefail
+    /home/{{ ansible_user }}/worker.join.sh
+  args:
+    executable: /bin/bash
+  register: command_output
+  changed_when: false
+  when: "'worker' in  group_names"

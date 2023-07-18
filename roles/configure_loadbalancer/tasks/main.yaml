@@ -1,0 +1,21 @@
+- name: Transfer haproxy haproxy_final.cfg to master node
+  ansible.builtin.copy:
+    src: ./roles/extract_ingress_ports/templates/master_final-edited.cfg.j2
+    dest: "/etc/haproxy/haproxy.cfg"
+    group: "root"
+    owner: "root"
+    mode: "0644"
+    backup: true
+  notify: Restart HAProxy
+  when: inventory_hostname == groups['loadbalancer'][0]
+  
+- name: Transfer haproxy haproxy_final.cfg to backup node
+  ansible.builtin.copy:
+    src: ./roles/extract_ingress_ports/templates/backup_final-edited.cfg.j2
+    dest: "/etc/haproxy/haproxy.cfg"
+    group: "root"
+    owner: "root"
+    mode: "0644"
+    backup: true
+  notify: Restart HAProxy
+  when: inventory_hostname == groups['loadbalancer'][1]

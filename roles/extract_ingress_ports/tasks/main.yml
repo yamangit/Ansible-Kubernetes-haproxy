@@ -1,0 +1,76 @@
+- name: Deploy Ingress Nginx controller
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.0/deploy/static/provider/baremetal/deploy.yaml
+  args:
+    executable: /bin/bash
+  register: ingress_controller_result
+  changed_when: ingress_controller_result.stdout != ""
+
+- name: Extract ingress-nginx-controller ports
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    kubectl get svc ingress-nginx-controller -n ingress-nginx -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort},{.spec.ports[?(@.name=="https")].nodePort}'
+  args:
+    executable: /bin/bash
+  register: ingress_nginx_controller_ports
+  changed_when: false
+
+  
+- name: Set facts on the allhosts
+  ansible.builtin.set_fact:
+    ingress_nginx_controller_port_80: "{{ ingress_nginx_controller_ports.stdout.split(',')[0] | int }}"
+    ingress_nginx_controller_port_443: "{{ ingress_nginx_controller_ports.stdout.split(',')[1] | int }}"
+  delegate_to: localhost
+
+- name: Transfer template file to master node
+  ansible.builtin.copy:
+    src: ./roles/extract_ingress_ports/templates/master_final.cfg.j2
+    dest: master_final.cfg.j2
+    mode: "0644"
+
+- name: Transfer template file to backup node
+  ansible.builtin.copy:
+    src: ./roles/extract_ingress_ports/templates/backup_final.cfg.j2
+    dest: mackup_final.cfg.j2
+    mode: "0644"
+
+- name: Render template for master node
+  ansible.builtin.template:
+    src: master_final.cfg.j2
+    dest: master_final-edited.cfg.j2
+    mode: "0644"
+  register: template_render_result0
+
+- name: Delete the rendered file0
+  ansible.builtin.file:
+    path: master_final.cfg.j2
+    state: absent
+  when: template_render_result0 is succeeded
+  
+- name: Fetch haproxy-final-master node config file
+  ansible.builtin.fetch:
+    src: master_final-edited.cfg.j2
+    dest: ./roles/extract_ingress_ports/templates/master_final-edited.cfg.j2
+    flat: true
+
+- name: Render template for backup node
+  ansible.builtin.template:
+    src: backup_final.cfg.j2
+    dest: backup_final-edited.cfg.j2
+    mode: "0644"
+  register: template_render_result1
+
+- name: Delete the rendered backup_final.cfg
+  ansible.builtin.file:
+    path: backup_final.cfg.j2
+    state: absent
+  when: template_render_result1 is succeeded
+  
+- name: Fetch haproxy-final-backup node config file
+  ansible.builtin.fetch:
+    src: backup_final-edited.cfg.j2
+    dest: ./roles/extract_ingress_ports/templates/backup_final-edited.cfg.j2
+    flat: true

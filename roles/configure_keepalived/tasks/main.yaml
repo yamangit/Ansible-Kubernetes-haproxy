@@ -1,0 +1,63 @@
+
+- name: Install Keepalived and dependencies
+  ansible.builtin.apt:
+    name: 
+    - policycoreutils-python-utils
+    - keepalived 
+    state: present
+
+- name: Get interface for IP address1
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    ip -o -4 addr show | awk '$4 == "{{ hostvars[groups['loadbalancer'][0]]['ansible_host'] }}/24" {print $2}'
+  args:
+    executable: /bin/bash
+  register: interface_output0
+  when: "'loadbalancer' in group_names and groups['loadbalancer']|length >= 1 and inventory_hostname == groups['loadbalancer'][0]"
+  changed_when: true
+  ignore_errors: true
+
+- name: Get interface for IP address2
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    ip -o -4 addr show | awk '$4 == "{{ hostvars[groups['loadbalancer'][1]]['ansible_host'] }}/24" {print $2}'
+  args:
+    executable: /bin/bash
+  register: interface_output1
+  when: "'loadbalancer' in group_names and groups['loadbalancer']|length == 2 and inventory_hostname == groups['loadbalancer'][1]"
+  changed_when: true
+  ignore_errors: true
+
+- name: Display command_output
+  ansible.builtin.debug:
+    var: interface_output0.stdout
+     
+- name: Set facts for localhost1
+  ansible.builtin.set_fact:
+    interface_01: "{{ interface_output0.stdout | default('') }}"
+  when: "'loadbalancer' in group_names and groups['loadbalancer']|length >= 1 and inventory_hostname == groups['loadbalancer'][0]"
+
+- name: Set facts for localhost2
+  ansible.builtin.set_fact:
+    interface_02: "{{ interface_output1.stdout | default('') }}"
+  when: "'loadbalancer' in group_names and groups['loadbalancer']|length == 2 and inventory_hostname == groups['loadbalancer'][1]"
+
+- name: Transfer keepalived config file to master nodes of haproxy
+  ansible.builtin.template:
+    src: keepalived_temp_master.cfg.j2
+    dest: /etc/keepalived/keepalived.conf
+    mode: "0644"
+  notify: Restart keepalived
+  when: "'loadbalancer' in group_names and groups['loadbalancer']|length >= 1 and inventory_hostname == groups['loadbalancer'][0]"
+  
+- name: Transfer keepalived config file to backup nodes of haproxy
+  ansible.builtin.template:
+    src: keepalived_temp_backup.cfg.j2
+    dest: /etc/keepalived/keepalived.conf
+    mode: "0644"
+  notify: Restart keepalived
+  when: "'loadbalancer' in group_names and groups['loadbalancer']|length == 2 and inventory_hostname == groups['loadbalancer'][1]"
+
+  

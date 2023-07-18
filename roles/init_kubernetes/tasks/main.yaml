@@ -1,0 +1,81 @@
+---
+- name: Reset kubeadm
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    kubeadm reset -f
+  args:
+    executable: /bin/bash
+  changed_when: true
+  when: inventory_hostname not in groups['loadbalancer'] and inventory_hostname not in groups['floating_ip']
+  
+- name: Delete old kubeconfig file
+  ansible.builtin.file:
+    path: /etc/kubernetes/admin.conf
+    state: absent
+  changed_when: true
+  when: inventory_hostname not in groups['loadbalancer'] and inventory_hostname not in groups['floating_ip']
+
+- name: Initialize Kubernetes control plane if loadbalancer is present and 'floating_ip' also defined
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    kubeadm init --control-plane-endpoint={{ hostvars[groups['floating_ip'][0]]['ansible_host'] }}:6443 --upload-certs --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_host'] }} --pod-network-cidr=10.244.0.0/16 --v=5
+  args:
+    executable: /bin/bash
+    creates: /etc/kubernetes/admin.conf
+  register: kubeadm_init_with_floating_ip
+  become: true
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  when: groups['floating_ip'] | length == 1 and inventory_hostname == groups['master'][0]
+
+- name: Initialize Kubernetes control plane if loadbalancer is present but 'floating_ip' is not present
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    kubeadm init --control-plane-endpoint={{ hostvars[groups['loadbalancer'][0]]['ansible_host'] }}:6443 --upload-certs --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_host'] }} --pod-network-cidr=10.244.0.0/16 --v=5
+  args:
+    executable: /bin/bash
+    creates: /etc/kubernetes/admin.conf
+  register: kubeadm_init_with_loadbalancer
+  become: true
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  when: groups['loadbalancer'] | length == 1 and inventory_hostname == groups['master'][0]
+  
+- name: Initialize Kubernetes control plane if loadbalancer and 'floating_ip' are not present
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    kubeadm init --control-plane-endpoint={{ hostvars[groups['master'][0]]['ansible_host'] }}:6443 --upload-certs --apiserver-advertise-address={{ hostvars[groups['master'][0]]['ansible_host'] }} --pod-network-cidr=10.244.0.0/16 --v=5
+  args:
+    executable: /bin/bash
+    creates: /etc/kubernetes/admin.conf
+  register: kubeadm_init_without_loadbalancer_or_floating_ip
+  become: true
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  when: groups['loadbalancer'] | length == 0 and groups['floating_ip'] | length == 0 and inventory_hostname == groups['master'][0]
+
+
+- name: Save kubeadm init command to file kubeadm_init_with_floating_ip
+  ansible.builtin.copy:
+    content: "{{ kubeadm_init_with_floating_ip.stdout }}"
+    dest: "{{ ansible_user_dir }}/init_command"
+    mode: "0644"
+  when: groups['floating_ip'] | length == 1 and inventory_hostname == groups['master'][0]
+
+- name: Save kubeadm init command to file kubeadm_init_with_loadbalancer
+  ansible.builtin.copy:
+    content: "{{ kubeadm_init_with_loadbalancer.stdout }}"
+    dest: "{{ ansible_user_dir }}/init_command"
+    mode: "0644"
+  when: groups['loadbalancer'] | length == 1 and inventory_hostname == groups['master'][0]
+
+- name: Save kubeadm init command to file kubeadm_init_without_loadbalancer_or_floating_ip
+  ansible.builtin.copy:
+    content: "{{ kubeadm_init_without_loadbalancer_or_floating_ip.stdout }}"
+    dest: "{{ ansible_user_dir }}/init_command"
+    mode: "0644"
+  when: groups['loadbalancer'] | length == 0 and groups['floating_ip'] | length == 0 and inventory_hostname == groups['master'][0]

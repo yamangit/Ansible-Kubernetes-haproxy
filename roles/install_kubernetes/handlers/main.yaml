@@ -1,0 +1,9 @@
+---
+- name: Update GRUB
+  ansible.builtin.command: sudo update-grub
+  changed_when: false
+
+- name: Restart containerd
+  ansible.builtin.systemd:
+    name: containerd
+    state: restarted

@@ -6,7 +6,7 @@
     - keepalived 
     state: present
 
-- name: Get interface for IP address1
+- name: Get Network interface name of loadbalancer-01
   ansible.builtin.shell: |
     #!/bin/bash
     set -o pipefail
@@ -14,11 +14,11 @@
   args:
     executable: /bin/bash
   register: interface_output0
-  when: "'loadbalancer' in group_names and groups['loadbalancer']|length >= 1 and inventory_hostname == groups['loadbalancer'][0]"
+  when: "'loadbalancer' in group_names and groups['loadbalancer']|length == 2 and inventory_hostname == groups['loadbalancer'][0]"
   changed_when: true
   ignore_errors: true
 
-- name: Get interface for IP address2
+- name: Get Network interface name of loadbalancer-02
   ansible.builtin.shell: |
     #!/bin/bash
     set -o pipefail
@@ -26,7 +26,7 @@
   args:
     executable: /bin/bash
   register: interface_output1
-  when: "'loadbalancer' in group_names and groups['loadbalancer']|length == 2 and inventory_hostname == groups['loadbalancer'][1]"
+  when: "'loadbalancer' in group_names and groups['loadbalancer'] | length == 2 and inventory_hostname == groups['loadbalancer'][1]"
   changed_when: true
   ignore_errors: true
 
@@ -37,7 +37,7 @@
 - name: Set facts for localhost1
   ansible.builtin.set_fact:
     interface_01: "{{ interface_output0.stdout | default('') }}"
-  when: "'loadbalancer' in group_names and groups['loadbalancer']|length >= 1 and inventory_hostname == groups['loadbalancer'][0]"
+  when: "'loadbalancer' in group_names and groups['loadbalancer']|length == 2 and inventory_hostname == groups['loadbalancer'][0]"
 
 - name: Set facts for localhost2
   ansible.builtin.set_fact:
@@ -50,7 +50,7 @@
     dest: /etc/keepalived/keepalived.conf
     mode: "0644"
   notify: Restart keepalived
-  when: "'loadbalancer' in group_names and groups['loadbalancer']|length >= 1 and inventory_hostname == groups['loadbalancer'][0]"
+  when: "'loadbalancer' in group_names and groups['loadbalancer']|length == 2 and inventory_hostname == groups['loadbalancer'][0]"
   
 - name: Transfer keepalived config file to backup nodes of haproxy
   ansible.builtin.template:

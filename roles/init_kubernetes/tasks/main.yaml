@@ -7,14 +7,14 @@
   args:
     executable: /bin/bash
   changed_when: true
-  when: inventory_hostname not in groups['loadbalancer'] and inventory_hostname not in groups['floating_ip']
+  when: inventory_hostname not in (groups['loadbalancer'] | default([])) and inventory_hostname not in (groups['floating_ip'] | default([]))
   
 - name: Delete old kubeconfig file
   ansible.builtin.file:
     path: /etc/kubernetes/admin.conf
     state: absent
   changed_when: true
-  when: inventory_hostname not in groups['loadbalancer'] and inventory_hostname not in groups['floating_ip']
+  when: inventory_hostname not in (groups['loadbalancer'] | default([])) and inventory_hostname not in (groups['floating_ip'] | default([]))
 
 - name: Initialize Kubernetes control plane if loadbalancer is present and 'floating_ip' also defined
   ansible.builtin.shell: |
@@ -28,7 +28,7 @@
   become: true
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  when: groups['floating_ip'] | length == 1 and inventory_hostname == groups['master'][0]
+  when: (groups['floating_ip'] | default([]) | length == 1) and (groups['loadbalancer'] | default([]) | length > 1) and inventory_hostname == groups['master'][0]
 
 - name: Initialize Kubernetes control plane if loadbalancer is present but 'floating_ip' is not present
   ansible.builtin.shell: |
@@ -42,7 +42,7 @@
   become: true
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  when: groups['loadbalancer'] | length == 1 and inventory_hostname == groups['master'][0]
+  when: (groups['floating_ip'] | default([]) | length == 0) and (groups['loadbalancer'] | default([]) | length == 1) and inventory_hostname == groups['master'][0]
   
 - name: Initialize Kubernetes control plane if loadbalancer and 'floating_ip' are not present
   ansible.builtin.shell: |
@@ -56,7 +56,7 @@
   become: true
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  when: groups['loadbalancer'] | length == 0 and groups['floating_ip'] | length == 0 and inventory_hostname == groups['master'][0]
+  when: (groups['floating_ip'] | default([]) | length == 0) and (groups['loadbalancer'] | default([]) | length == 0) and inventory_hostname == groups['master'][0]
 
 
 - name: Save kubeadm init command to file kubeadm_init_with_floating_ip
@@ -64,18 +64,18 @@
     content: "{{ kubeadm_init_with_floating_ip.stdout }}"
     dest: "{{ ansible_user_dir }}/init_command"
     mode: "0644"
-  when: groups['floating_ip'] | length == 1 and inventory_hostname == groups['master'][0]
+  when: (groups['floating_ip'] |  default([]) | length == 1) and (groups['loadbalancer'] |  default([]) | length > 1) and inventory_hostname == groups['master'][0]
 
 - name: Save kubeadm init command to file kubeadm_init_with_loadbalancer
   ansible.builtin.copy:
     content: "{{ kubeadm_init_with_loadbalancer.stdout }}"
     dest: "{{ ansible_user_dir }}/init_command"
     mode: "0644"
-  when: groups['loadbalancer'] | length == 1 and inventory_hostname == groups['master'][0]
+  when: (groups['floating_ip'] |  default([]) | length == 0) and (groups['loadbalancer'] |  default([]) | length == 1) and inventory_hostname == groups['master'][0]
 
 - name: Save kubeadm init command to file kubeadm_init_without_loadbalancer_or_floating_ip
   ansible.builtin.copy:
     content: "{{ kubeadm_init_without_loadbalancer_or_floating_ip.stdout }}"
     dest: "{{ ansible_user_dir }}/init_command"
     mode: "0644"
-  when: groups['loadbalancer'] | length == 0 and groups['floating_ip'] | length == 0 and inventory_hostname == groups['master'][0]
+  when: (groups['loadbalancer'] | default([]) | length == 0) and (groups['floating_ip']| default([]) | length == 0) and inventory_hostname == groups['master'][0]

@@ -51,14 +51,14 @@
     state: directory
     mode: "0700"
   become: false
-  when: "'master' in  group_names and inventory_hostname == groups['master'][1]"
+  when: "'master' in  group_names and groups['master'] | length > 1 and inventory_hostname == groups['master'][1]"
 
 - name: Register kube config directory path in master-02
   ansible.builtin.command: echo "{{ ansible_env.HOME }}/.kube"
   register: kube_config_dir
   changed_when: false
   become: false
-  when: "'master' in  group_names and inventory_hostname == groups['master'][1]"
+  when: "'master' in  group_names and groups['master'] | length > 1 and inventory_hostname == groups['master'][1]"
 
 - name: Copy kube config file in master-02
   ansible.builtin.copy:
@@ -70,7 +70,7 @@
     remote_src: true
   become: yes
   become_user: root
-  when: "'master' in  group_names and inventory_hostname == groups['master'][1]"
+  when: "'master' in  group_names and groups['master'] | length > 1 and inventory_hostname == groups['master'][1]"
 
 - name: Get Kubernetes nodes from master-02
   ansible.builtin.shell: |
@@ -81,7 +81,7 @@
     executable: /bin/bash
   changed_when: false
   become: false
-  when: "'master' in  group_names and inventory_hostname == groups['master'][1]"
+  when: "'master' in  group_names and groups['master'] | length > 1 and inventory_hostname == groups['master'][1]"
 
 
 - name: Check if Flannel is installed in master nodes

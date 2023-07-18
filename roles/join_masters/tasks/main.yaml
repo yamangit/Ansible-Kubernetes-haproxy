@@ -1,4 +1,4 @@
-- name: Generate master join command
+- name: Generate master join command in master-01
   ansible.builtin.shell: |
     #!/bin/bash
     set -o pipefail
@@ -7,30 +7,30 @@
     executable: /bin/bash
   register: master_join_command
   changed_when: true
-  when: inventory_hostname == groups['master'][0]
+  when: (groups['master'] | default([]) | length > 1) and inventory_hostname == groups['master'][0]
 
-- name: Save master join command to template file
+- name: Save master join command to template file from master-01
   ansible.builtin.copy:
     content: "{{ master_join_command.stdout }}"
     dest: master.join.j2
     mode: 0644
-  when: inventory_hostname == groups['master'][0]
+  when: (groups['master'] | default([]) | length > 1) and inventory_hostname == groups['master'][0]
 
-- name: Fetch master.join.j2 to local machine
+- name: Fetch master.join.j2 to local machine from master-01
   ansible.builtin.fetch:
     src: master.join.j2
     dest: roles/join_masters/templates/masters.join.j2
     flat: yes
-  when: inventory_hostname == groups['master'][0]
+  when: (groups['master'] | default([]) | length > 1) and inventory_hostname == groups['master'][0]
 
-- name: Read master join command from file
+- name: Transfer  master join command to master-02
   ansible.builtin.template:
     src: masters.join.j2
     dest: /home/{{ ansible_user }}/master.join.sh
     mode: "0755"
-  when: "ansible_hostname == groups['master'][1]"
+  when: "(groups['master'] | default([]) | length > 1) and ansible_hostname == groups['master'][1]"
 
-- name: Execute command from file on remote hosts
+- name: Execute master join command to master-02
   ansible.builtin.shell: |
     #!/bin/bash
     set -o pipefail
@@ -40,4 +40,4 @@
   register: command_output
   changed_when: false
   become: true
-  when: "ansible_hostname == groups['master'][1]"
+  when: "(groups['master'] | default([]) | length > 1) and ansible_hostname == groups['master'][1]"

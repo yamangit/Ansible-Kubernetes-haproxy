@@ -24,7 +24,7 @@
     mode: "0644"
     backup: true
   notify: Restart haproxy
-  when: "'loadbalancer' in group_names and groups['loadbalancer']|length == 2 and inventory_hostname == groups['loadbalancer'][0]"
+  when: "'loadbalancer' in group_names and groups['loadbalancer']|length == 1 and inventory_hostname == groups['loadbalancer'][0]"
 
 - name: Copy HAProxy configuration file to backup node
   ansible.builtin.template:

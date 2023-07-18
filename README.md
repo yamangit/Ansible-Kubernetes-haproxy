@@ -1,5 +1,5 @@
 # Ansible-Kubernetes-haproxy with keepalived
-## Cluster of this playbook
+## Cluster for this playbook
 |    Nodes     |            Nodes Count          |
 |--------------|---------------------------------|
 | Master       | 2 nodes (master-01, master-02)  |

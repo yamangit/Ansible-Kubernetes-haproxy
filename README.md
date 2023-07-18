@@ -14,17 +14,17 @@
 git clone https://github.com/yamangit/Ansible-Kubernetes-haproxy.git
 ```
 
-### 2. Make Python environment
+### 2. Change the directory
 ```bash
 cd Ansible-Kubernetes-haproxy
 ```
 
-#### 3. Run the inventory.ini.py script, it will create hosts_lists.txt and inventory.ini file in current directory
+#### 3. Run `inventory.ini.py` script, it will create `hosts_lists.txt` and `inventory.ini` file in current directory
 ```bash
 python3 inventory.ini.py
 ```
 
-#### 4. Copy the SSH to targeted host machines and provide necessary username and password having sudo privilege
+#### 4. Copy SSH-Key to targeted host machines and provide necessary `username and password having sudo privilege`
 ```bash
 python3 copy_sshkey.py hosts_lists.txt
 ```

@@ -1,4 +1,4 @@
-# Ansible-Kubernetes-haproxx with keepalived
+# Ansible-Kubernetes-haproxy with keepalived
 ## Cluster of this playbook
 |    Nodes     |            Nodes Count          |
 |--------------|---------------------------------|

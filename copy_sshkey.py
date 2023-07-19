@@ -11,16 +11,17 @@ def ssh_copy_id(username, host, password, port=22):
         sys.exit(1)
 
 if __name__ == "__main__":
+    
+    if len(sys.argv) < 2:
+        print("Usage: python copy_sshkey.py path_to_host_file")
+        sys.exit(1)
+
     username = input("Enter your SSH username: ")
 
     password = getpass.getpass("Enter your SSH password: ")
 
     if not username or not password:
         print("Username and password cannot be empty.")
-        sys.exit(1)
-
-    if len(sys.argv) < 2:
-        print("Usage: python copy_sshkey.py path_to_host_file")
         sys.exit(1)
 
     host_file_path = sys.argv[1]

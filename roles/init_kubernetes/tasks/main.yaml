@@ -17,7 +17,6 @@
     - /etc/kubernetes/kubelet.conf
     - /etc/kubernetes/pki/ca.crt
     - /etc/kubernetes/admin.conf
-
   changed_when: true
   when: inventory_hostname not in (groups['loadbalancer'] | default([])) and inventory_hostname not in (groups['floating_ip'] | default([]))
 

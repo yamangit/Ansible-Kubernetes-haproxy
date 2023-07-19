@@ -16,11 +16,11 @@ containerd: `containerd.io=1.6.4-1`
 python: `python3.10+`
 
 ## Dependency Cluster for this playbook
-|    Nodes     |                    Nodes Count                          |
-|--------------|---------------------------------------------------------|
-| Master       | 1 node  or 2 nodes (master-01 or master-01, master-02)  |
-| Worker       | As you wish                                             |
-| Load Balancer| 1 node or 2 nodes (master or master, backup)            |
+|    Nodes     |                         Nodes Count                               |
+|--------------|-------------------------------------------------------------------|
+| Master       | 1 node  or 2 nodes (master-01 or master-01, master-02)            |
+| Worker       | As you wish                                                       |
+| Load Balancer| 0 node or 1 node or 2 nodes (master or master, backup)            |
 
 ## Usage
 

@@ -1,5 +1,5 @@
 # Ansible-Kubernetes-haproxy with keepalived
-## Cluster for this playbook
+## Dependency Cluster for this playbook
 |    Nodes     |            Nodes Count          |
 |--------------|---------------------------------|
 | Master       | 2 nodes (master-01, master-02)  |
@@ -35,7 +35,7 @@ source env/bin/activate
 ```
 #### 6. Finally, Run the main playbook
 ```bash
-ansible-playbook main_playbooks.yaml --ask-becom-pass
+ansible-playbook main_playbooks.yaml --ask-become-pass
 ```
 ## Enjoy!!!!
 

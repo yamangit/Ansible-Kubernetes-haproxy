@@ -20,8 +20,9 @@ containerd.io=1.6.4-1
 ```
 
 ### 4. Python and ansible version
-python: `python3.10+`, 
-ansible: `ansible [core 2.15.1]`
+python: `python3+`, 
+ansible: `ansible [core 2.15.1]`,
+venv: `python3+-venv` 
 
 ## Dependency Cluster for this playbook
 |    Nodes     |                         Nodes Count                               |

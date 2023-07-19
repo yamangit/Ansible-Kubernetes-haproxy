@@ -1,11 +1,35 @@
 # Ansible-Kubernetes-haproxy with keepalived
-## Cluster for this playbook
-|    Nodes     |            Nodes Count          |
-|--------------|---------------------------------|
-| Master       | 2 nodes (master-01, master-02)  |
-| Worker       | As you wish                     |
-| Load Balancer| 2 nodes (master and backup)      |
 
+## Dependency packages and OS
+### 1. Tested on
+ubuntu=`Ubuntu 22.04.2 LTS`
+
+### 2. Kubernetes version
+kubectl: `kubectl=1.25.0-00`, 
+kubelet: `kubelet=1.25.0-00`, 
+kubeadm: `kubeadm=1.25.0-00`, 
+```bash
+kubectl=1.25.0-00
+kubelet=1.25.0-00
+kubeadm=1.25.0-00
+```
+### 3. Containerd version
+containerd: `containerd.io=1.6.4-1`
+```bash
+containerd.io=1.6.4-1
+```
+
+### 4. Python and ansible version
+python: `python3+`, 
+ansible: `ansible [core 2.15.1]`,
+venv: `python3+-venv` 
+
+## Dependency Cluster for this playbook
+|    Nodes     |                         Nodes Count                               |
+|--------------|-------------------------------------------------------------------|
+| Master       | 1 node  or 2 nodes (master-01 or master-01, master-02)            |
+| Worker       | As you wish                                                       |
+| Load Balancer| 0 node or 1 node or 2 nodes (master or master, backup)            |
 
 ## Usage
 
@@ -35,7 +59,7 @@ source env/bin/activate
 ```
 #### 6. Finally, Run the main playbook
 ```bash
-ansible-playbook main_playbooks.yaml --ask-becom-pass
+ansible-playbook main_playbooks.yaml --ask-become-pass
 ```
 ## Enjoy!!!!
 

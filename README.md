@@ -5,15 +5,15 @@
 ubuntu=`Ubuntu 22.04.2 LTS`
 
 ### 2. Kubernetes version
-kubectl: `kubectl=1.25.0-00`
-kubelet: `kubelet=1.25.0-00`
-kubeadm: `kubeadm=1.25.0-00`
+kubectl: `kubectl=1.25.0-00`, 
+kubelet: `kubelet=1.25.0-00`, 
+kubeadm: `kubeadm=1.25.0-00`, 
 
 ### 3. Containerd version
 containerd: `containerd.io=1.6.4-1`
 
 ### 4. Python and ansible version
-python: `python3.10+`
+python: `python3.10+`, 
 ansible: `ansible [core 2.15.1]`
 
 ## Dependency Cluster for this playbook

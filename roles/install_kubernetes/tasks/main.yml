@@ -14,17 +14,17 @@
     regexp: '^/swap.img.*'
     line: '#\1'
 
-- name: Stop process holding dpkg lock
-  ansible.builtin.shell: |
-    #!/bin/bash
-    set -o pipefail
-    killall unattended-upgr
-  args:
-    executable: /bin/bash
-  failed_when: false
-  ignore_errors: true
-  register: ignore_errors_register1
-  changed_when: false
+# - name: Stop process holding dpkg lock
+#   ansible.builtin.shell: |
+#     #!/bin/bash
+#     set -o pipefail
+#     killall unattended-upgr
+#   args:
+#     executable: /bin/bash
+#   failed_when: false
+#   ignore_errors: true
+#   register: ignore_errors_register1
+#   changed_when: false
 
 - name: Delete dpkg lock file
   ansible.builtin.file:

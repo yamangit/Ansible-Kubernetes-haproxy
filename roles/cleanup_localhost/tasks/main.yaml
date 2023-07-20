@@ -8,5 +8,4 @@
     - "{{ playbook_dir }}/roles/extract_ingress_ports/templates/backup_final-edited.cfg.j2"
     - "{{ playbook_dir }}/roles/extract_ingress_ports/templates/master_final-edited.cfg.j2"
     - "{{ playbook_dir }}/hosts_lists.txt"
-    - "{{ playbook_dir }}/inventory.ini"
     - "{{ playbook_dir }}/init_command"

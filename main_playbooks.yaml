@@ -1,31 +1,31 @@
 ---
-- name: Change all hostname in suitable form
-  hosts: all,!floating_ip
-  gather_facts: true
-  become: true
-  roles:
-    - change_hostname
+# - name: Change all hostname in suitable form
+#   hosts: all,!floating_ip
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - change_hostname
 
-- name: Configure keepalived
-  hosts: loadbalancer
-  gather_facts: true
-  become: true
-  roles:
-    - configure_keepalived
+# - name: Configure keepalived
+#   hosts: loadbalancer
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - configure_keepalived
 
-- name: Installing haproxy
-  hosts: loadbalancer
-  gather_facts: true
-  become: true
-  roles:
-    - role: install_haproxy
+# - name: Installing haproxy
+#   hosts: loadbalancer
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - role: install_haproxy
 
-- name: Installing Kubernetes in master nodes
-  hosts: [master,worker]
-  gather_facts: true
-  become: true
-  roles:
-    - role: install_kubernetes
+# - name: Installing Kubernetes in master nodes
+#   hosts: [master,worker]
+#   gather_facts: true
+#   become: true
+#   roles:
+#     - role: install_kubernetes
 
 - name: Init master nodes
   hosts: all

@@ -30,6 +30,7 @@
     creates: /etc/kubernetes/admin.conf
   register: kubeadm_init_with_floating_ip
   become: true
+  become_user: root
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
   when: (groups['floating_ip'] | default([]) | length == 1) and (groups['loadbalancer'] | default([]) | length > 1) and inventory_hostname == groups['master'][0]
@@ -44,6 +45,7 @@
     creates: /etc/kubernetes/admin.conf
   register: kubeadm_init_with_loadbalancer
   become: true
+  become_user: root
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
   when: (groups['floating_ip'] | default([]) | length == 0) and (groups['loadbalancer'] | default([]) | length == 1) and inventory_hostname == groups['master'][0]
@@ -58,6 +60,7 @@
     creates: /etc/kubernetes/admin.conf
   register: kubeadm_init_without_loadbalancer_or_floating_ip
   become: true
+  become_user: root
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
   when: (groups['floating_ip'] | default([]) | length == 0) and (groups['loadbalancer'] | default([]) | length == 0) and inventory_hostname == groups['master'][0]

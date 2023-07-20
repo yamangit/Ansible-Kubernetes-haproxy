@@ -2,10 +2,12 @@
   ansible.builtin.shell: |
     #!/bin/bash
     set -o pipefail
-    echo "$(sudo kubeadm token create --print-join-command) --control-plane --certificate-key $(sudo kubeadm init phase upload-certs --upload-certs 2>/dev/null | grep -vw -e certificate -e Namespace) --apiserver-advertise-address={{ hostvars[groups['master'][1]]['ansible_host'] }}"
+    echo "$(kubeadm token create --print-join-command) --control-plane --certificate-key $(kubeadm init phase upload-certs --upload-certs 2>/dev/null | grep -vw -e certificate -e Namespace) --apiserver-advertise-address={{ hostvars[groups['master'][1]]['ansible_host'] }}"
   args:
     executable: /bin/bash
   register: master_join_command
+  become: true
+  become_user: root
   changed_when: true
   when: (groups['master'] | default([]) | length > 1) and inventory_hostname == groups['master'][0]
 

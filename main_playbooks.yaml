@@ -35,7 +35,7 @@
     - role: init_kubernetes
 
 - name: Join workers to master
-  hosts: all,!floaring_ip,!loadbalancer
+  hosts: all,!floating_ip,!loadbalancer
   gather_facts: true
   become: true
   roles:
@@ -67,6 +67,13 @@
   roles:
     - configure_loadbalancer
 
+- name: Install docker rancher 
+  hosts: [rancher]
+  gather_facts: true
+  become: true
+  roles:
+    - role: install_rancher
+    
 - name: Delete Files from Local Machine
   hosts: localhost
   gather_facts: false

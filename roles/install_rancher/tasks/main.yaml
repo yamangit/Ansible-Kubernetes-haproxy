@@ -1,0 +1,104 @@
+- name: Set hostname for each host in the inventory
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Delete dpkg lock file
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /var/lib/dpkg/lock
+    - /var/lib/dpkg/lock-frontend
+  ignore_errors: true
+  register: ignore_errors_register
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install docker dependencies
+  ansible.builtin.apt:
+    update_cache: true
+    name:
+      - curl
+      - gnupg2
+      - software-properties-common
+      - apt-transport-https
+      - ca-certificates
+      - python3-pip
+
+- name: Import Docker GPG key
+  ansible.builtin.apt_key:
+    keyring: /etc/apt/trusted.gpg.d/docker.gpg
+    state: present
+    url: https://download.docker.com/linux/ubuntu/gpg
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+
+- name: Install Docker
+  ansible.builtin.apt:
+    name: docker-ce
+    state: present
+
+- name: Add the user to the docker group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: yes
+
+- name: Start and enable Docker service
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Reboot the host
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+    msg: "Restarting the host"
+    pre_reboot_delay: 5
+
+- name: Install Docker Compose
+  ansible.builtin.pip:
+    name: docker-compose
+    state: present
+
+- name: Create a directory for Rancher data
+  ansible.builtin.file:
+    path: /opt/rancher
+    state: directory
+    mode: "0644"
+
+- name: Create a docker-compose file for Rancher
+  ansible.builtin.copy:
+    content: |
+      version: '3.8'
+
+      services:
+        rancher:
+          image: rancher/rancher:latest
+          container_name: rancher
+          restart: unless-stopped
+          ports:
+            - "80:80"
+            - "443:443"
+          volumes:
+            - /opt/rancher:/var/lib/rancher
+          labels:
+            - "traefik.enable=false"
+          privileged: true
+    dest: /opt/rancher/docker-compose.yml
+    mode: "0644"
+
+- name: Start Rancher container
+  ansible.builtin.shell: |
+    #!/bin/bash
+    set -o pipefail
+    docker-compose -f /opt/rancher/docker-compose.yml up -d
+  args:
+    executable: /bin/bash
+  changed_when: true
